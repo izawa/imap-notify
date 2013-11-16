@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# -*- coding: utf-8 -*-
+
+require 'pp'
+
+require 'imap/notify'
+include Imap::Notify
+
+###
+# load ~/.imap-notifyrc
+###
+$myConfig = { }
+load File.expand_path('~/.imap-notifyrc')
+
+#pp $myConfig
+
+
+mainloop
+
