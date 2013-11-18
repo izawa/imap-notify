@@ -17,7 +17,6 @@ class Trigger
     @subject
   end
 
-
   def action(&block)
     @action = Action.new
     @action.instance_eval &block if block_given?
@@ -26,5 +25,4 @@ class Trigger
   def get_action
     @action
   end
-
 end

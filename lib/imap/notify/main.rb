@@ -3,8 +3,6 @@ require 'net/imap'
 require 'terminal-notifier'
 require 'nkf'
 
-
-
 def mainloop
   OpenSSL::SSL.module_eval{ remove_const(:VERIFY_PEER) }
   OpenSSL::SSL.const_set( :VERIFY_PEER, OpenSSL::SSL::VERIFY_NONE )
@@ -15,7 +13,6 @@ def mainloop
   from_attr = 'BODY[HEADER.FIELDS (FROM)]'
   # メール本文(Body)
   body_attr = 'BODY[TEXT]'
-
 
   conn = { }
   threads = { }
@@ -48,6 +45,7 @@ def mainloop
 
               
               puts "==============="
+              puts msgid
               puts from
 
               triggers.each do |trigger| # trigger 毎にループしてmatchチェック
@@ -65,6 +63,7 @@ def mainloop
             end
           end
         end
+        puts "--- #{hostname} ----------------------------------------------"
         sleep hostcfgs.get_duration.to_i
       end
     end

@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+#
+## regular expression if mail address (addr-spec) RFC5322 like
+## ref: http://blog.everqueue.com/chiba/2009/03/22/163/
+
 def get_mailaddr(line)
   wsp           = '[\x20\x09]'
   vchar         = '[\x21-\x7e]'
@@ -23,7 +27,6 @@ def get_mailaddr(line)
     return nil
   end
 end
-
 
 def check_mailaddr(addr)
   wsp           = '[\x20\x09]'

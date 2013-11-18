@@ -6,10 +6,10 @@ require 'imap/notify/version'
 Gem::Specification.new do |spec|
   spec.name          = "imap-notify"
   spec.version       = Imap::Notify::VERSION
-  spec.authors       = ["いざわゆきみつ (Yukimitsu Izawa)"]
+  spec.authors       = ["いざわゆきみつ (Yukimitsu Izawa)"]
   spec.email         = ["izawa@izawa.org"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
+  spec.description   = "imap client for notification center on OSX"
+  spec.summary       = "imap client for notification center on OSX"
   spec.homepage      = ""
   spec.license       = "MIT"
 

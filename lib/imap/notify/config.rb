@@ -1,5 +1,4 @@
-
-class HostConfig
+class ServerConfig
   attr_accessor :host, :port, :user, :password, :ssl_flag, :auth_mode, :duration,:mboxes
   attr_accessor :name
 
@@ -10,7 +9,6 @@ class HostConfig
     @ssl_flag = false
     @mboxes = { }
   end
-
 
   def host(host)
     @host = host
@@ -75,7 +73,6 @@ class HostConfig
 ###
 # DSL functions
 ###
-
   def mbox(name, &block)
     @name = name
     self.instance_eval &block if block_given?

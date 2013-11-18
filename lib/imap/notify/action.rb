@@ -1,7 +1,6 @@
 class Action
   attr_accessor :title, :body, :url, :sound, :seen_flag
 
-
   def initialize
     @seen_flag = true
   end
@@ -45,5 +44,4 @@ class Action
   def seen?
     @seen_flag
   end
-
 end

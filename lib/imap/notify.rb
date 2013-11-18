@@ -7,8 +7,8 @@ require "imap/notify/util"
 
 module Imap
   module Notify
-    def imapConfig(host, &block)
-      config = HostConfig.new(host)
+    def server(host, &block)
+      config = ServerConfig.new(host)
       config.instance_eval &block
       $myConfig[host] = config
     end
