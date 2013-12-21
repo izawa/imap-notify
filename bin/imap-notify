@@ -4,6 +4,7 @@
 require 'imap/notify'
 include Imap::Notify
 
+Thread.abort_on_exception = true
 ###
 # load ~/.imap-notifyrc
 ###

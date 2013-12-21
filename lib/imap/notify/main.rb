@@ -16,6 +16,7 @@ def mainloop
 
   conn = { }
   threads = { }
+
 ########
 # initializing connections.
 ########
@@ -39,10 +40,10 @@ def mainloop
           conn[hostname].search(['UNSEEN']).each do |msgid|
             conn[hostname].fetch(msgid, [subject_attr, from_attr, body_attr]).each do |mail|
               #from, subject, bodyを取得
-              from = get_mailaddr(mail.attr[from_attr])
-              subject = NKF.nkf("-m -w", mail.attr[subject_attr].tr("\r\n",""))[9..-1]
-              body = NKF.nkf("-m -w", mail.attr[body_attr])
-
+              from = get_mailaddr(mail.attr[from_attr]) if mail.attr[from_attr]
+              subject = NKF.nkf("-m -w", mail.attr[subject_attr]) if mail.attr[subject_attr]
+              subject = subject.tr("\r\n","")[9..-1]  if subject
+              body = NKF.nkf("-m -w", mail.attr[body_attr]) if mail.attr[body_attr]
               
               puts "==============="
               puts msgid
@@ -79,9 +80,7 @@ def mainloop
   conn.each do |key, imap|
     imap.disconnect
   end
-  
 end
-
 
 def matcher(trigger, mail = { })
   if trigger.get_from
@@ -96,9 +95,6 @@ def matcher(trigger, mail = { })
 end
 
 def actant(action, mail = { })
-  # pp action
-  # pp mail
-
   title = action.get_title
   title = title.call(mail) if title.class.to_s == "Proc"
 
@@ -108,47 +104,13 @@ def actant(action, mail = { })
   url = action.get_url
   url = url.call(mail) if url.class.to_s == "Proc"
 
-  TerminalNotifier.notify(body, title: title, sound: action.get_sound, open: url)
-end
+  sound = action.get_sound
 
-def mainloop_
-  OpenSSL::SSL.module_eval{ remove_const(:VERIFY_PEER) }
-  OpenSSL::SSL.const_set(:VERIFY_PEER, OpenSSL::SSL::VERIFY_NONE)
-  imap = Net::IMAP.new('izawa.org', 993, true)
+  option_hash = { }
 
-  user = "izawa"
-  pass = "vzcs1bk"
-  duration = 60
+  option_hash[:title] = title if title
+  option_hash[:open]  = url   if url
+  option_hash[:sound] = sound if sound
 
-  imap.authenticate('PLAIN', user, pass)
-  
-  # メールヘッダの件名(Subject)
-  subject_attr_name = 'BODY[HEADER.FIELDS (SUBJECT)]'
-  # メールヘッダの差出人(From)
-  from_attr_name = 'BODY[HEADER.FIELDS (FROM)]'
-  # メール本文(Body)
-  body_attr_name = 'BODY[TEXT]'
-
-  # ここから先をループ
-  while(true)
-    imap.examine('INBOX')
-    msgids = imap.search(['UNSEEN']).each do |msgid|
-      imap.fetch(msgid, [subject_attr_name, from_attr_name, body_attr_name]).each do |mail|
-      from = get_mailaddr(mail.attr[from_attr_name])
-      if from == 'osirase_r@kakaku.com'
-        puts mail.attr[subject_attr_name]
-        subject = NKF.nkf("-m -w", mail.attr[subject_attr_name].gsub("\r","").gsub("\n","")).gsub("Subject: ","")
-        puts subject
-        body = kakaku_body2info(NKF.nkf("-m -w", mail.attr[body_attr_name]))
-        puts body
-        TerminalNotifier.notify(body, title: subject, sound: 'Purr', open: kakaku_body2url(NKF.nkf("-m -w", mail.attr[body_attr_name])))
-        puts msgid
-        imap.select('INBOX')
-        imap.store(msgid, '+FLAGS', :Seen)
-        imap.examine('INBOX')
-      end
-    end
-  end
-  sleep duration
-end
+  TerminalNotifier.notify(body, option_hash)
 end
