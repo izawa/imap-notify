@@ -1,0 +1,134 @@
+
+imap-notify
+
+imapサーバからメールを取得して、通知センターを使って通知するプログラム。
+
+設定は、~/.imap-notifyrc へ専用のDSLを記述することで実施する。
+
+設定例：~/.imap-notifyrc
+----------------------------------------------------------------------
+server 'izawa.org' do   #サーバのFQDN
+  port  '993'
+  use_ssl               #sslを使う場合に指定する
+  user  'izawa'
+  password  'secret_password'
+  auth_mode 'PLAIN'
+  duration  '120' # 新着メールを確認しに行くインターバル(秒)
+  
+  mbox "inbox" do
+    trigger do
+      # from と subject のいずれかがマッチすればactionが発火する
+      from  'osirase_r@kakaku.com' #部分マッチ
+      #subject   'xxxxx' #部分マッチ
+
+      action do
+        title 'hogehoge'  # String か Stringを返すlambda式
+        body  'foobar'    # String か Stringを返すlambda式
+        sound 'Basso'
+        seen true # trueだと一度表示すると既読マークを付けて二度と表示されない
+      end
+    end
+  end
+end
+
+server 'imap.clwit.co.jp' do
+  port '143'
+  user 'yukipo@clwit.co.jp'
+  password 'secret_password'
+  auth_mode 'PLAIN'
+  duration  '180' 
+
+  mbox "inbox" do
+    trigger do
+      from 'izawa@clwit.co.jp'
+      action do
+        seen false
+        title "てすと"
+        body ->(mailHash) do #lambda式のサンプル。hashがひとつ渡される。
+          mailHash[:subject]
+        end
+        url "http://www.izawa.org/" #通知をクリックした時に表示されるページ
+      end
+    end
+  end
+end
+----------------------------------------------------------------------
+
+サーバ毎にスレッドを起こして新着メールの確認と通知を実施している。
+
+※ lambda式に渡されるhashは、以下の形式となっている。
+
+{ :subject => "サブジェクトのデコード後の文字列(utf-8)",
+  :from    => "fromのメールアドレス部",
+  :body    => "本文(utf-8)" }
+
+
+
+
+
+※ kakaku.com の最安値変更通知メールのサンプル
+===ここから=============================================================
+From: お知らせ＠価格.com <osirase_r@kakaku.com>
+Subject: 【価格.com】EB-S02H 最安値変動お知らせ
+
+●…………………………………………………………………………………………●
+　　　　　　　 価格.com お気に入り製品 最安変動お知らせメール
+●…………………………………………………………………………………………●
+
+あなたのお気に入り製品の最安価格が更新されました。
+
+プロジェクタ > EPSON
+『EB-S02H』
+http://kakaku.com/item/K0000396334/?cid=mail_saiyasu1
+
+▼最安価格
+\32,799
+
+▼設定時または前回の通知からの変動額
+-\529 (↓)
+
+              (以下省略)
+===ここまで=============================================================
+
+トリガについて
+   trigger do
+      from  'osirase_r@kakaku.com'
+で、from で引っ掛ける。
+
+アクションについて
+
+クリックした時に表示するURLは、「あなたのお気に入り製品の最安価格が更
+新されました。」という行の4行先の一行を取得する。
+(例：http://kakaku.com/item/K0000396334/?cid=mail_saiyasu1)
+
+        url ->(mailHash) do
+          lines=mailHash[:body].split("\r\n")
+          ret = ""
+          for i in 0..lines.size-1 do
+            ret += lines[i+4] if lines[i] == "あなたのお気に入り製品の最安価格が更新されました。"
+          end
+          return ret
+        end
+
+通知センターのタイトルは、Subjectの「Subject: 」の部分を削ってそれ以降
+の部分を利用する。
+(例：【価格.com】EB-S02H 最安値変動お知らせ)
+
+        title ->(mailHash) do
+                mailHash[:subject][8..-1]
+        end
+
+通知センターの本文は、「▼最安価格」の次の行と「▼設定時または前回の通
+知からの変動額」の次の行をつなげたものを利用する。
+(例：\32,799-\529 (↓))
+
+        body ->(mailHash) do
+          lines = mailHash[:body].split("\r\n")
+          ret = ""
+          for i in 0..lines.size-1 do
+          ret += lines[i+1] if lines[i] == "▼最安価格" or lines[i] == "▼設定時または前回の通知からの変動額"
+          end
+          return ret
+        end
+
+こんなかんじ。
